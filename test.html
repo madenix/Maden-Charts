@@ -1,49 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  
 </head>
 <body>
-    <canvas id="canvas" width="400" height="300"></canvas>
-
-<script> 
-    const data = [ 
-        {x: 10, y: 20}, 
-        {x: 150, y: 200}, 
-        {x: 200, y: 150}, 
-        {x: 250, y: 280}, 
-        {x: 300, y: 250} 
-    ];
-
-    const canvas = document.getElementById("canvas");
-    //ctx = canvas context
-    const ctx = canvas.getContext("2d");
+  <canvas id="canvas" width="400" height="300"></canvas>
     
+  <script>
+  const data = [
+    {x: 10, y: 20},
+    {x: 150, y: 200},
+    {x: 200, y: 150},
+    {x: 250, y: 280},
+    {x: 300, y: 250}
+  ];
+    
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  
+  function drawAxisLines(){
+     //draw y axis
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, canvas.height);
+    ctx.stroke();
+    //draw x axis
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height -10);
+    ctx.lineTo(canvas.width, canvas.height -10);
+    ctx.stroke();
+  }
+  drawAxisLines();
+  /**
+   * Returns a "nice" rounded step size for axis ticks.
+   * Used to avoid awkward values (e.g. 3.14, 7.36) and produce
+   * human-friendly intervals like 1, 2, 5, 10, 20, 50, 100...
+   *
+   * This is a common technique in charting libraries (e.g. TradingView)
+   * to make axis labels cleaner and easier to read.
+   */
+  function niceNumber(range) {
     const niceSteps = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
-
-
-    function drawAxisLines(){
-        //draw Y axis
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(0, canvas.height);
-        ctx.stroke();
-
-        //draw X axis
-        ctx.beginPath();
-        ctx.moveTo(0, canvas.height);
-        ctx.lineTo(canvas.width, canvas.height);
-        ctx.stroke();
+    // Return the first "nice" step that is >= range.
+    for (let i = 0; i < niceSteps.length; i++) {
+        if (range <= niceSteps[i]) return niceSteps[i];
     }
-    drawAxisLines();
+    // If range exceeds all predefined steps, use the largest fallback.
+    return niceSteps[niceSteps.length - 1];
+  }
+    
+  function drawXValues(data){
+    const xValues = data.map(value => value.x);
+    const minXValue = Math.min(...xValues);
+    const maxXValue = Math.max(...xValues);
+    const xRange = maxXValue - minXValue;
+    
+    const tick = niceNumber(xRange / 5);
+    const xStart = Math.floor(minXValue / tick) * tick;
+    const xEnd = Math.ceil(maxXValue / tick) * tick;
 
     
-    function xAxisLabels(){
-        
+    for(let i = xStart; i<=xEnd; i=i+tick){
+      ctx.fillText(i, i, canvas.height);
     }
-</script>
-
+  }
+  drawXValues(data);
+  
+  </script>
 </body>
 </html>
