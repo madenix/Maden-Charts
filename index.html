@@ -5,29 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
-<body>
-    <canvas id="canvas" width="400" height="300" style="background-color: aliceblue;"></canvas>
+<body style="background-color: black;">
+    <canvas id="canvas" height="300" style="background-color: aliceblue; width: 100%;"></canvas>
 
 <script> 
     const data = [ 
-        {x: 10, y: 20}, 
+        {x: 50, y: 20}, 
         {x: 150, y: 200}, 
         {x: 200, y: 150}, 
         {x: 250, y: 280}, 
         {x: 300, y: 250}, 
         {x: 400, y: 260}, 
-        {x: 500, y: 175} 
+        {x: 500, y: 175},
+        {x: 600, y: 150},
+        {x: 700, y: 150}, 
+        {x: 800, y: 150}, 
+        {x: 900, y: 150}, 
+        {x: 1000, y: 150}, 
+        {x: 1100, y: 150} 
     ];
 
     const canvas = document.getElementById("canvas");
+    let rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width; 
+    canvas.height = rect.height; 
+
+    const niceSteps = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
+    const axisPadding = {left: 30, bottom: 30};
+
     //ctx = canvas context
     const ctx = canvas.getContext("2d");
-
-    const niceSteps = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
-    const axisPadding = {left: 30, bottom: 30};
-    const usableWidth = canvas.width - axisPadding.left;
-    const usableHeight = canvas.height - axisPadding.bottom;
+    let usableWidth = canvas.width - axisPadding.left;
+    let usableHeight = canvas.height - axisPadding.bottom;
     const minPixPerTick = 50;
+
+    //if usableWidth = 300 px then maxTickCount = 300 / 50 = 6
+    let maxTickCount = Math.floor(usableWidth / minPixPerTick);
+
+    function getNiceStep(number){
+        for(let i=0; i<niceSteps.length; i++){
+            if(number <= niceSteps[i]){return niceSteps[i];}
+        }
+
+        return niceSteps[niceSteps.length-1];
+    }
 
     function drawAxisLines(){ 
         //draw y axis 
@@ -42,15 +63,65 @@
         ctx.lineTo(canvas.width, canvas.height - axisPadding.bottom); 
         ctx.stroke(); 
     } 
-    drawAxisLines();
+    
 
     function drawXAxisLabels(data){
         const xValues = data.map(value => value.x);
         const maxXValue = Math.max(...xValues);
         const minXValue = Math.min(...xValues);
+        const range = maxXValue - minXValue;
+
+        //roughStep=range/maxTickCount is used to divide the x axis into equal sections
+        const roughStep = Math.floor(range/maxTickCount);
+
+        //to make x axis labels more human readable 
+        const niceStep = getNiceStep(roughStep);
+
+        const xStart = Math.floor(minXValue / niceStep) * niceStep; //x axis start label
+        const xEnd = Math.ceil(maxXValue / niceStep) * niceStep; //x axis end label
+
+        for(let i = xStart; i<=xEnd; i=i+niceStep){
+            if(i==xStart){continue;}
+            const labelXpos = ((i - minXValue) / range) * usableWidth; //find x label position on canvas as pixels
+            ctx.fillText(i.toString(), labelXpos + axisPadding.left, usableHeight + axisPadding.bottom / 2);
+
+            ctx.beginPath();
+            ctx.moveTo(labelXpos + axisPadding.left + 5, canvas.height - axisPadding.bottom);
+            ctx.lineTo(labelXpos + axisPadding.left + 5, canvas.height - axisPadding.bottom + 5);
+            ctx.stroke();
+        }
     }
 
+    function drawYAxisLabels(data){
+        const yValues = data.map(value => value.y);
+        const maxYValue = Math.max(...yValues);
+        const minYValue = Math.min(...yValues);
+        const range = maxYValue - minYValue;
+
+        //roughStep=range/maxTickCount is used to divide the y axis into equal sections
+        const roughStep = Math.floor(range/maxTickCount);
+
+        //to make y axis labels more human readable 
+        const niceStep = getNiceStep(roughStep);
+
+        const yStart = Math.floor(minYValue / niceStep) * niceStep; //y axis start label
+        const yEnd = Math.ceil(maxYValue / niceStep) * niceStep; //y axis end label
+
+        for(let i = yStart; i<=yEnd; i=i+niceStep){
+            if(i==yStart){continue;}
+            const labelYpos = usableHeight - ((i - minYValue) / range) * usableHeight;//find y label position on canvas as pixels
+            ctx.fillText(i.toString(), (axisPadding.left / 2)-5, labelYpos);
+
+            ctx.beginPath();
+            ctx.moveTo(axisPadding.left-2, labelYpos-2);
+            ctx.lineTo(axisPadding.left +5 , labelYpos-2);
+            ctx.stroke();
+        }
+    }
+
+    drawAxisLines();
     drawXAxisLabels(data);
+    drawYAxisLabels(data);
 </script>
 
 </body>
