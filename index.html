@@ -1,128 +1,321 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canvas Chart</title>
 </head>
-<body style="background-color: black;">
-    <canvas id="canvas" height="300" style="background-color: aliceblue; width: 100%;"></canvas>
+<body style="background-color: black; margin:0; padding:0;">
+<canvas id="canvas" style="background-color: grey; width:100vw; height:100vh;"></canvas>
 
-<script> 
-    const data = [ 
-        {x: 50, y: 20}, 
-        {x: 150, y: 200}, 
-        {x: 200, y: 150}, 
-        {x: 250, y: 280}, 
-        {x: 300, y: 250}, 
-        {x: 400, y: 260}, 
-        {x: 500, y: 175},
-        {x: 600, y: 150},
-        {x: 700, y: 150}, 
-        {x: 800, y: 150}, 
-        {x: 900, y: 150}, 
-        {x: 1000, y: 150}, 
-        {x: 1100, y: 150} 
-    ];
+<script>
+const data = [
+{ x:10, y:101.20},{ x:1, y:101.35},{ x:2, y:101.50},{ x:3, y:101.45},{ x:4, y:101.60},
+{ x:5, y:101.55},{ x:6, y:101.70},{ x:7, y:101.85},{ x:8, y:101.80},{ x:9, y:101.95},
+{ x:10, y:102.10},{ x:11, y:102.05},{ x:12, y:102.20},{ x:13, y:102.15},{ x:14, y:102.30},
+{ x:15, y:102.25},{ x:16, y:102.40},{ x:17, y:102.55},{ x:18, y:102.50},{ x:19, y:102.65},
+{ x:20, y:102.60},{ x:21, y:102.75},{ x:22, y:102.70},{ x:23, y:102.85},{ x:24, y:102.80},
+{ x:25, y:102.95},{ x:26, y:103.10},{ x:27, y:103.05},{ x:28, y:103.20},{ x:29, y:103.15},
+{ x:30, y:103.30},{ x:31, y:103.25},{ x:32, y:103.40},{ x:33, y:103.55},{ x:34, y:103.50},
+{ x:35, y:103.65},{ x:36, y:103.60},{ x:37, y:103.75},{ x:38, y:103.70},{ x:39, y:103.85},
+{ x:40, y:103.80},{ x:41, y:103.95},{ x:42, y:104.10},{ x:43, y:104.05},{ x:44, y:104.20},
+{ x:45, y:104.15},{ x:46, y:104.30},{ x:47, y:104.25},{ x:48, y:104.40},{ x:49, y:104.35},
+{ x:50, y:104.50},{ x:51, y:104.45},{ x:52, y:104.60},{ x:53, y:104.55},{ x:54, y:104.70},
+{ x:55, y:104.65},{ x:56, y:104.80},{ x:57, y:104.75},{ x:58, y:104.90},{ x:59, y:104.85},
+{ x:60, y:105.00},{ x:61, y:104.95},{ x:62, y:105.10},{ x:63, y:105.05},{ x:64, y:105.20},
+{ x:65, y:105.15},{ x:66, y:105.30},{ x:67, y:105.25},{ x:68, y:105.40},{ x:69, y:105.35},
+{ x:70, y:105.50},{ x:71, y:105.45},{ x:72, y:105.60},{ x:73, y:105.55},{ x:74, y:105.70},
+{ x:75, y:105.65},{ x:76, y:105.80},{ x:77, y:105.75},{ x:78, y:105.90},{ x:79, y:105.85},
+{ x:80, y:106.00},{ x:81, y:105.95},{ x:82, y:106.10},{ x:83, y:106.05},{ x:84, y:106.20},
+{ x:85, y:106.15},{ x:86, y:106.30},{ x:87, y:106.25},{ x:88, y:106.40},{ x:89, y:106.35},
+{ x:90, y:106.50},{ x:91, y:106.45},{ x:92, y:106.60},{ x:93, y:106.55},{ x:94, y:106.70},
+{ x:95, y:106.65},{ x:96, y:106.80},{ x:97, y:106.75},{ x:98, y:106.90},{ x:99, y:106.85}
+];
 
-    const canvas = document.getElementById("canvas");
-    let rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width; 
-    canvas.height = rect.height; 
+// ---------------- GLOBAL VARIABLES ----------------
+const canvas = document.getElementById("canvas");
+const AXIS_PADDING = { left: 30, bottom: 30, right:10, top: 10};
+const MIN_PIX_PER_TICK = 50;
+const xVals = data.map(d => d.x);
+const yVals = data.map(d => d.y);
+//to make the thicks more human readable
+const NICE_STEPS = [1,2,5,10,20,50,100,200,500,1000,2000,5000,10000];
 
-    const niceSteps = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
-    const axisPadding = {left: 30, bottom: 30};
+let ctx; //canvas context
+let rect; //canvas area
 
-    //ctx = canvas context
-    const ctx = canvas.getContext("2d");
-    let usableWidth = canvas.width - axisPadding.left;
-    let usableHeight = canvas.height - axisPadding.bottom;
-    const minPixPerTick = 50;
+let minXValue = Math.min(...xVals);
+let maxXValue = Math.max(...xVals);
+let minYValue = Math.min(...yVals);
+let maxYValue = Math.max(...yVals);
 
-    //if usableWidth = 300 px then maxTickCount = 300 / 50 = 6
-    let maxTickCount = Math.floor(usableWidth / minPixPerTick);
+//usableWidth = canvas.width - AXIS_PADDING.left....
+let usableWidth, usableHeight; 
+let maxTickCount; //(usableWidth / MIN_PIX_PER_TICK)
 
-    function getNiceStep(number){
-        for(let i=0; i<niceSteps.length; i++){
-            if(number <= niceSteps[i]){return niceSteps[i];}
-        }
+//pan and zoom variables
+let isDragging = false;
+let dragStart = { x: 0, y: 0 };
+let panOffset = { x: 0, y: 0 };
+let lastPinchDist = 0;
 
-        return niceSteps[niceSteps.length-1];
+// ---------------- HELPER ----------------
+function getNiceStep(n) {
+    for (let i of NICE_STEPS) if (n <= i) return i;
+    return NICE_STEPS[NICE_STEPS.length - 1];
+}
+
+// ---------------- AXIS DRAWING ----------------
+function drawAxisLines() {
+    ctx.beginPath();
+    ctx.moveTo(AXIS_PADDING.left, 0);
+    ctx.lineTo(AXIS_PADDING.left, usableHeight);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(AXIS_PADDING.left, usableHeight);
+    ctx.lineTo(canvas.width, usableHeight);
+    ctx.stroke();
+}
+
+function drawXAxisLabels() {
+    const range = maxXValue - minXValue;
+    const roughStep = Math.floor(range / maxTickCount);
+    const niceStep = getNiceStep(roughStep);
+
+    const xStart = Math.floor(minXValue / niceStep) * niceStep;
+    const xEnd = Math.ceil(maxXValue / niceStep) * niceStep;
+
+    for (let i = xStart; i <= xEnd; i += niceStep) {
+        //if (i === xStart) continue;
+
+        const pos = ((i - minXValue) / range) * usableWidth;
+        ctx.fillText(i, AXIS_PADDING.left + pos - 5, usableHeight + 15);
     }
+}
 
-    function drawAxisLines(){ 
-        //draw y axis 
-        ctx.beginPath(); 
-        ctx.moveTo(axisPadding.left, 0); 
-        ctx.lineTo(axisPadding.left, canvas.height - axisPadding.bottom); 
-        ctx.stroke(); 
-        
-        //draw x axis 
-        ctx.beginPath(); 
-        ctx.moveTo(axisPadding.left, canvas.height - axisPadding.bottom); 
-        ctx.lineTo(canvas.width, canvas.height - axisPadding.bottom); 
-        ctx.stroke(); 
-    } 
-    
+function drawYAxisLabels() {
+    const range = maxYValue - minYValue;
+    const roughStep = Math.floor(range / maxTickCount);
+    const niceStep = getNiceStep(roughStep);
 
-    function drawXAxisLabels(data){
-        const xValues = data.map(value => value.x);
-        const maxXValue = Math.max(...xValues);
-        const minXValue = Math.min(...xValues);
-        const range = maxXValue - minXValue;
+    const yStart = Math.floor(minYValue / niceStep) * niceStep;
+    const yEnd = Math.ceil(maxYValue / niceStep) * niceStep;
 
-        //roughStep=range/maxTickCount is used to divide the x axis into equal sections
-        const roughStep = Math.floor(range/maxTickCount);
+    for (let i = yStart; i <= yEnd; i += niceStep) {
+        if (i === yStart) continue;
 
-        //to make x axis labels more human readable 
-        const niceStep = getNiceStep(roughStep);
+        const pos = usableHeight - ((i - minYValue) / range) * usableHeight;
 
-        const xStart = Math.floor(minXValue / niceStep) * niceStep; //x axis start label
-        const xEnd = Math.ceil(maxXValue / niceStep) * niceStep; //x axis end label
-
-        for(let i = xStart; i<=xEnd; i=i+niceStep){
-            if(i==xStart){continue;}
-            const labelXpos = ((i - minXValue) / range) * usableWidth; //find x label position on canvas as pixels
-            ctx.fillText(i.toString(), labelXpos + axisPadding.left, usableHeight + axisPadding.bottom / 2);
-
-            ctx.beginPath();
-            ctx.moveTo(labelXpos + axisPadding.left + 5, canvas.height - axisPadding.bottom);
-            ctx.lineTo(labelXpos + axisPadding.left + 5, canvas.height - axisPadding.bottom + 5);
-            ctx.stroke();
-        }
+        ctx.fillText(i, 5, pos + 3);
     }
+}
 
-    function drawYAxisLabels(data){
-        const yValues = data.map(value => value.y);
-        const maxYValue = Math.max(...yValues);
-        const minYValue = Math.min(...yValues);
-        const range = maxYValue - minYValue;
+// ---------------- LİNE DRAWING ----------------
+function drawLineSeries() {
+    const rangeX = maxXValue - minXValue;
+    const rangeY = maxYValue - minYValue;
 
-        //roughStep=range/maxTickCount is used to divide the y axis into equal sections
-        const roughStep = Math.floor(range/maxTickCount);
+    for (let i = 0; i < data.length - 1; i++) {
+        let x1 = ((data[i].x - minXValue) / rangeX) * usableWidth + AXIS_PADDING.left;
+        let y1 = usableHeight - ((data[i].y - minYValue) / rangeY) * usableHeight;
 
-        //to make y axis labels more human readable 
-        const niceStep = getNiceStep(roughStep);
+        let x2 = ((data[i+1].x - minXValue) / rangeX) * usableWidth + AXIS_PADDING.left;
+        let y2 = usableHeight - ((data[i+1].y - minYValue) / rangeY) * usableHeight;
 
-        const yStart = Math.floor(minYValue / niceStep) * niceStep; //y axis start label
-        const yEnd = Math.ceil(maxYValue / niceStep) * niceStep; //y axis end label
-
-        for(let i = yStart; i<=yEnd; i=i+niceStep){
-            if(i==yStart){continue;}
-            const labelYpos = usableHeight - ((i - minYValue) / range) * usableHeight;//find y label position on canvas as pixels
-            ctx.fillText(i.toString(), (axisPadding.left / 2)-5, labelYpos);
-
-            ctx.beginPath();
-            ctx.moveTo(axisPadding.left-2, labelYpos-2);
-            ctx.lineTo(axisPadding.left +5 , labelYpos-2);
-            ctx.stroke();
-        }
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
     }
+}
+
+// ---------------- MAIN DRAWING ----------------
+function draw() {
+    rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+
+    ctx = canvas.getContext("2d");
+    ctx.font = "12px Arial";
+
+    usableWidth = canvas.width - AXIS_PADDING.left - AXIS_PADDING.right;
+    usableHeight = canvas.height - AXIS_PADDING.bottom - AXIS_PADDING.top;
+
+    maxTickCount = Math.floor(usableWidth / MIN_PIX_PER_TICK);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     drawAxisLines();
-    drawXAxisLabels(data);
-    drawYAxisLabels(data);
-</script>
+    drawXAxisLabels();
+    drawYAxisLabels();
+    drawLineSeries();
+}
 
+draw();
+
+// ---------------- RESIZE HELPER ----------------
+let rTimer;
+window.addEventListener("resize", () => {
+    clearTimeout(rTimer);
+    rTimer = setTimeout(draw, 120);
+});
+
+function getTouchDistance(t1, t2) {
+    return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+}
+
+//mobile devices pan
+canvas.addEventListener("touchstart", e => {
+    if (e.touches.length === 1) {
+        isDragging = true;
+
+        const rect = canvas.getBoundingClientRect();
+        const t = e.touches[0];
+
+        dragStart = { 
+            x: t.clientX - rect.left,
+            y: t.clientY - rect.top
+        };
+    }
+
+    if (e.touches.length === 2) {
+        lastPinchDist = getTouchDistance(e.touches[0], e.touches[1]);
+    }
+});
+
+canvas.addEventListener("touchmove", e => {
+    const rect = canvas.getBoundingClientRect();
+
+    // ----- PINCH ZOOM -----
+    if (e.touches.length === 2) {
+        e.preventDefault();
+
+        const newDist = getTouchDistance(e.touches[0], e.touches[1]);
+        const zoomFactor = lastPinchDist / newDist; 
+
+        lastPinchDist = newDist;
+
+        const rangeX = maxXValue - minXValue;
+        const rangeY = maxYValue - minYValue;
+
+        const newRangeX = rangeX * zoomFactor;
+        const newRangeY = rangeY * zoomFactor;
+
+        const centerX = (minXValue + maxXValue) / 2;
+        const centerY = (minYValue + maxYValue) / 2;
+
+        minXValue = centerX - newRangeX / 2;
+        maxXValue = centerX + newRangeX / 2;
+
+        minYValue = centerY - newRangeY / 2;
+        maxYValue = centerY + newRangeY / 2;
+
+        draw();
+        return; // zoom olduğu için pan yapma
+    }
+
+    // ----- PAN (TEK PARMAK) -----
+    if (e.touches.length === 1 && isDragging) {
+        e.preventDefault();
+
+        const t = e.touches[0];
+        const mouseX = t.clientX - rect.left;
+        const mouseY = t.clientY - rect.top;
+
+        const dx = mouseX - dragStart.x;
+        const dy = mouseY - dragStart.y;
+
+        const rangeX = maxXValue - minXValue;
+        const rangeY = maxYValue - minYValue;
+
+        const xPerPixel = rangeX / usableWidth;
+        const yPerPixel = rangeY / usableHeight;
+
+        minXValue -= dx * xPerPixel;
+        maxXValue -= dx * xPerPixel;
+
+        minYValue += dy * yPerPixel;
+        maxYValue += dy * yPerPixel;
+
+        dragStart = { x: mouseX, y: mouseY };
+
+        draw();
+    }
+});
+
+
+canvas.addEventListener("touchend", () => isDragging = false);
+canvas.addEventListener("touchcancel", () => isDragging = false);
+
+canvas.addEventListener("mousedown", e => {
+    isDragging = true;
+
+    const rect = canvas.getBoundingClientRect();
+    dragStart = { 
+        x: e.clientX - rect.left, 
+        y: e.clientY - rect.top 
+    };
+});
+
+canvas.addEventListener("mousemove", e => {
+    if (!isDragging) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    const dx = mouseX - dragStart.x;
+    const dy = mouseY - dragStart.y;
+
+    const rangeX = maxXValue - minXValue;
+    const rangeY = maxYValue - minYValue;
+
+    const xPerPixel = rangeX / usableWidth;
+    const yPerPixel = rangeY / usableHeight;
+
+    minXValue -= dx * xPerPixel;
+    maxXValue -= dx * xPerPixel;
+    minYValue += dy * yPerPixel;
+    maxYValue += dy * yPerPixel;
+
+    dragStart = { x: mouseX, y: mouseY };
+    draw();
+});
+
+canvas.addEventListener("mouseup", () => isDragging = false);
+canvas.addEventListener("mouseleave", () => isDragging = false);
+
+canvas.addEventListener("wheel", e => {
+    e.preventDefault(); // sayfanın kaymasını engelle
+
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // Fare konumunu oran olarak al
+    const zoomX = (mouseX - AXIS_PADDING.left) / usableWidth;
+    const zoomY = (mouseY) / usableHeight;
+
+    const zoomFactor = e.deltaY < 0 ? 0.9 : 1.1; // yukarı scroll = zoom in, aşağı = zoom out
+
+    const rangeX = maxXValue - minXValue;
+    const rangeY = maxYValue - minYValue;
+
+    const newRangeX = rangeX * zoomFactor;
+    const newRangeY = rangeY * zoomFactor;
+
+    // Fare noktasını sabit tutarak min/max değerleri ayarla
+    minXValue = minXValue + rangeX * zoomX - newRangeX * zoomX;
+    maxXValue = minXValue + newRangeX;
+
+    minYValue = minYValue + rangeY * (1 - zoomY) - newRangeY * (1 - zoomY);
+    maxYValue = minYValue + newRangeY;
+
+    draw();
+});
+
+
+</script>
 </body>
 </html>
