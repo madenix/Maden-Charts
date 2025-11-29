@@ -55,6 +55,12 @@ let maxXValue = Math.max(...xVals);
 let minYValue = Math.min(...yVals);
 let maxYValue = Math.max(...yVals);
 
+//to reset to original pos
+const origMinX = Math.min(...xVals);
+const origMaxX = Math.max(...xVals);
+const origMinY = Math.min(...yVals);
+const origMaxY = Math.max(...yVals);
+
 //usableWidth = canvas.width - AXIS_PADDING.left....
 let usableWidth, usableHeight; 
 let maxTickCount; //(usableWidth / MIN_PIX_PER_TICK)
@@ -171,6 +177,16 @@ function draw() {
 
 draw();
 
+function resetView() {
+    minXValue = origMinX;
+    maxXValue = origMaxX;
+    minYValue = origMinY;
+    maxYValue = origMaxY;
+    draw();
+}
+
+canvas.addEventListener("dblclick", resetView);
+
 // ---------------- RESIZE HELPER ----------------
 let rTimer;
 window.addEventListener("resize", () => {
@@ -220,6 +236,12 @@ canvas.addEventListener("touchmove", e => {
         const t2 = e.touches[1];
 
         const newDist = getTouchDistance(t1, t2);
+
+        if (newDist < 10) {  // çok yakınsa
+            resetView();
+            return;
+        }
+
         const zoomFactor = lastPinchDist / newDist;
         lastPinchDist = newDist;
 
