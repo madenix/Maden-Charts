@@ -73,11 +73,12 @@ function getNiceStep(n) {
 
 // ---------------- AXIS DRAWING ----------------
 function drawAxisLines() {
+    //draw y axis
     ctx.beginPath();
     ctx.moveTo(AXIS_PADDING.left, 0);
     ctx.lineTo(AXIS_PADDING.left, usableHeight);
     ctx.stroke();
-
+    //draw x axis
     ctx.beginPath();
     ctx.moveTo(AXIS_PADDING.left, usableHeight);
     ctx.lineTo(canvas.width, usableHeight);
@@ -93,8 +94,6 @@ function drawXAxisLabels() {
     const xEnd = Math.ceil(maxXValue / niceStep) * niceStep;
 
     for (let i = xStart; i <= xEnd; i += niceStep) {
-        //if (i === xStart) continue;
-
         const pos = ((i - minXValue) / range) * usableWidth;
         ctx.fillText(i, AXIS_PADDING.left + pos - 5, usableHeight + 15);
     }
@@ -155,7 +154,19 @@ function draw() {
     drawAxisLines();
     drawXAxisLabels();
     drawYAxisLabels();
+
+    ctx.save(); // Mevcut Canvas durumunu kaydet
+    ctx.beginPath();
+    ctx.rect(
+        AXIS_PADDING.left,
+        AXIS_PADDING.top,
+        usableWidth,
+        usableHeight - AXIS_PADDING.top
+    );
+    ctx.clip(); // Bu yolu kırpma yolu olarak ayarla
+
     drawLineSeries();
+    ctx.restore();
 }
 
 draw();
