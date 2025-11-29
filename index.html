@@ -41,6 +41,12 @@ const yVals = data.map(d => d.y);
 //to make the thicks more human readable
 const NICE_STEPS = [1,2,5,10,20,50,100,200,500,1000,2000,5000,10000];
 
+//mobile touch constants
+const ZOOM_IN_LIMIT_X = 0.1;   // minimum range (yakınlaştırma sınırı)
+const ZOOM_IN_LIMIT_Y = 0.1;
+const ZOOM_OUT_LIMIT_X = 500;   // maximum range (uzaklaştırma sınırı)
+const ZOOM_OUT_LIMIT_Y = 500;
+
 let ctx; //canvas context
 let rect; //canvas area
 
@@ -219,6 +225,9 @@ canvas.addEventListener("touchmove", e => {
         const newRangeX = rangeX * zoomFactor;
         const newRangeY = rangeY * zoomFactor;
 
+        if (newRangeX < ZOOM_IN_LIMIT_X || newRangeX > ZOOM_OUT_LIMIT_X) return;
+        if (newRangeY < ZOOM_IN_LIMIT_Y || newRangeY > ZOOM_OUT_LIMIT_Y) return;
+
         // --- Pinch merkezini sabit tut ---
         minXValue = minXValue + rangeX * ratioX - newRangeX * ratioX;
         maxXValue = minXValue + newRangeX;
@@ -319,6 +328,9 @@ canvas.addEventListener("wheel", e => {
 
     const newRangeX = rangeX * zoomFactor;
     const newRangeY = rangeY * zoomFactor;
+
+    if (newRangeX < ZOOM_IN_LIMIT_X || newRangeX > ZOOM_OUT_LIMIT_X) return;
+    if (newRangeY < ZOOM_IN_LIMIT_Y || newRangeY > ZOOM_OUT_LIMIT_Y) return;
 
     // Fare noktasını sabit tutarak min/max değerleri ayarla
     minXValue = minXValue + rangeX * zoomX - newRangeX * zoomX;
