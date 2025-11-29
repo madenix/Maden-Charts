@@ -161,8 +161,16 @@ window.addEventListener("resize", () => {
     rTimer = setTimeout(draw, 120);
 });
 
+//touch functions
 function getTouchDistance(t1, t2) {
     return Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+}
+
+function getTouchCenter(t1, t2, rect) {
+    return {
+        x: ((t1.clientX + t2.clientX) / 2) - rect.left,
+        y: ((t1.clientY + t2.clientY) / 2) - rect.top
+    };
 }
 
 //mobile devices pan
@@ -191,10 +199,19 @@ canvas.addEventListener("touchmove", e => {
     if (e.touches.length === 2) {
         e.preventDefault();
 
-        const newDist = getTouchDistance(e.touches[0], e.touches[1]);
-        const zoomFactor = lastPinchDist / newDist; 
+        const t1 = e.touches[0];
+        const t2 = e.touches[1];
 
+        const newDist = getTouchDistance(t1, t2);
+        const zoomFactor = lastPinchDist / newDist;
         lastPinchDist = newDist;
+
+        // --- Pinch merkezini al ---
+        const center = getTouchCenter(t1, t2, rect);
+
+        // Canvas içindeki oranlar
+        const ratioX = (center.x - AXIS_PADDING.left) / usableWidth;
+        const ratioY = (center.y) / usableHeight;
 
         const rangeX = maxXValue - minXValue;
         const rangeY = maxYValue - minYValue;
@@ -202,17 +219,15 @@ canvas.addEventListener("touchmove", e => {
         const newRangeX = rangeX * zoomFactor;
         const newRangeY = rangeY * zoomFactor;
 
-        const centerX = (minXValue + maxXValue) / 2;
-        const centerY = (minYValue + maxYValue) / 2;
+        // --- Pinch merkezini sabit tut ---
+        minXValue = minXValue + rangeX * ratioX - newRangeX * ratioX;
+        maxXValue = minXValue + newRangeX;
 
-        minXValue = centerX - newRangeX / 2;
-        maxXValue = centerX + newRangeX / 2;
-
-        minYValue = centerY - newRangeY / 2;
-        maxYValue = centerY + newRangeY / 2;
+        minYValue = minYValue + rangeY * (1 - ratioY) - newRangeY * (1 - ratioY);
+        maxYValue = minYValue + newRangeY;
 
         draw();
-        return; // zoom olduğu için pan yapma
+        return;
     }
 
     // ----- PAN (TEK PARMAK) -----
