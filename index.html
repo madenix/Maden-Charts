@@ -114,10 +114,8 @@ const data = [
 
 // ---------------- GLOBAL VARIABLES ----------------
 const canvas = document.getElementById("canvas");
-const AXIS_PADDING = { left: 30, bottom: 30, right:10, top: 10};
+
 const MIN_PIX_PER_TICK = 50;
-const xVals = data.map(d => d.x);
-const yVals = data.map(d => d.y);
 //to make the thicks more human readable
 const NICE_STEPS = [1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,50000,100000,500000];
 
@@ -130,6 +128,10 @@ const ZOOM_OUT_LIMIT_Y = 500;
 let ctx; //canvas context
 let rect; //canvas area
 
+//map the data
+const xVals = data.map(d => d.x);
+const yVals = data.map(d => d.y);
+
 let minXValue = Math.min(...xVals);
 let maxXValue = Math.max(...xVals);
 let minYValue = Math.min(...yVals);
@@ -141,7 +143,8 @@ const origMaxX = Math.max(...xVals);
 const origMinY = Math.min(...yVals);
 const origMaxY = Math.max(...yVals);
 
-//usableWidth = canvas.width - AXIS_PADDING.left....
+let axisPadding = { left: 30, bottom: 30, right:10, top: 10};
+//usableWidth = canvas.width - axisPadding.left....
 let usableWidth, usableHeight; 
 let maxTickCount; //(usableWidth / MIN_PIX_PER_TICK)
 
@@ -161,12 +164,12 @@ function getNiceStep(n) {
 function drawAxisLines() {
     //draw y axis
     ctx.beginPath();
-    ctx.moveTo(AXIS_PADDING.left, 0);
-    ctx.lineTo(AXIS_PADDING.left, usableHeight);
+    ctx.moveTo(axisPadding.left, 0);
+    ctx.lineTo(axisPadding.left, usableHeight);
     ctx.stroke();
     //draw x axis
     ctx.beginPath();
-    ctx.moveTo(AXIS_PADDING.left, usableHeight);
+    ctx.moveTo(axisPadding.left, usableHeight);
     ctx.lineTo(canvas.width, usableHeight);
     ctx.stroke();
 }
@@ -181,7 +184,7 @@ function drawXAxisLabels() {
 
     for (let i = xStart; i <= xEnd; i += niceStep) {
         const pos = ((i - minXValue) / range) * usableWidth;
-        ctx.fillText(i, AXIS_PADDING.left + pos - 5, usableHeight + 15);
+        ctx.fillText(i, axisPadding.left + pos - 5, usableHeight + 15);
     }
 }
 
@@ -208,10 +211,10 @@ function drawLineSeries() {
     const rangeY = maxYValue - minYValue;
 
     for (let i = 0; i < data.length - 1; i++) {
-        let x1 = ((data[i].x - minXValue) / rangeX) * usableWidth + AXIS_PADDING.left;
+        let x1 = ((data[i].x - minXValue) / rangeX) * usableWidth + axisPadding.left;
         let y1 = usableHeight - ((data[i].y - minYValue) / rangeY) * usableHeight;
 
-        let x2 = ((data[i+1].x - minXValue) / rangeX) * usableWidth + AXIS_PADDING.left;
+        let x2 = ((data[i+1].x - minXValue) / rangeX) * usableWidth + axisPadding.left;
         let y2 = usableHeight - ((data[i+1].y - minYValue) / rangeY) * usableHeight;
 
         ctx.beginPath();
@@ -230,8 +233,10 @@ function draw() {
     ctx = canvas.getContext("2d");
     ctx.font = "12px Arial";
 
-    usableWidth = canvas.width - AXIS_PADDING.left - AXIS_PADDING.right;
-    usableHeight = canvas.height - AXIS_PADDING.bottom - AXIS_PADDING.top;
+    console.log(ctx.measureText(maxYValue.toString()).width);
+
+    usableWidth = canvas.width - axisPadding.left - axisPadding.right;
+    usableHeight = canvas.height - axisPadding.bottom - axisPadding.top;
 
     maxTickCount = Math.floor(usableWidth / MIN_PIX_PER_TICK);
 
@@ -244,10 +249,10 @@ function draw() {
     ctx.save(); // Mevcut Canvas durumunu kaydet
     ctx.beginPath();
     ctx.rect(
-        AXIS_PADDING.left,
-        AXIS_PADDING.top,
+        axisPadding.left,
+        axisPadding.top,
         usableWidth,
-        usableHeight - AXIS_PADDING.top
+        usableHeight - axisPadding.top
     );
     ctx.clip(); // Bu yolu kırpma yolu olarak ayarla
 
@@ -329,7 +334,7 @@ canvas.addEventListener("touchmove", e => {
         const center = getTouchCenter(t1, t2, rect);
 
         // Canvas içindeki oranlar
-        const ratioX = (center.x - AXIS_PADDING.left) / usableWidth;
+        const ratioX = (center.x - axisPadding.left) / usableWidth;
         const ratioY = (center.y) / usableHeight;
 
         const rangeX = maxXValue - minXValue;
@@ -431,7 +436,7 @@ canvas.addEventListener("wheel", e => {
     const mouseY = e.clientY - rect.top;
 
     // Fare konumunu oran olarak al
-    const zoomX = (mouseX - AXIS_PADDING.left) / usableWidth;
+    const zoomX = (mouseX - axisPadding.left) / usableWidth;
     const zoomY = (mouseY) / usableHeight;
 
     const zoomFactor = e.deltaY < 0 ? 0.9 : 1.1; // yukarı scroll = zoom in, aşağı = zoom out
