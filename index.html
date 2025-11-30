@@ -117,7 +117,7 @@ const canvas = document.getElementById("canvas");
 
 const MIN_PIX_PER_TICK = 50;
 //to make the thicks more human readable
-const NICE_STEPS = [1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,50000,100000,500000];
+const NICE_STEPS = [1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,50000,100000,500000,1000000,5000000,10000000];
 
 //mobile touch constants
 const ZOOM_IN_LIMIT_X = 0.1;   // minimum range (yakınlaştırma sınırı)
@@ -125,7 +125,7 @@ const ZOOM_IN_LIMIT_Y = 0.1;
 const ZOOM_OUT_LIMIT_X = 500;   // maximum range (uzaklaştırma sınırı)
 const ZOOM_OUT_LIMIT_Y = 500;
 
-let ctx; //canvas context
+let ctx = canvas.getContext("2d"); //canvas context
 let rect; //canvas area
 
 //map the data
@@ -144,6 +144,8 @@ const origMinY = Math.min(...yVals);
 const origMaxY = Math.max(...yVals);
 
 let axisPadding = { left: 30, bottom: 30, right:10, top: 10};
+axisPadding.left = ctx.measureText(maxYValue.toString()).width;
+
 //usableWidth = canvas.width - axisPadding.left....
 let usableWidth, usableHeight; 
 let maxTickCount; //(usableWidth / MIN_PIX_PER_TICK)
@@ -232,8 +234,6 @@ function draw() {
 
     ctx = canvas.getContext("2d");
     ctx.font = "12px Arial";
-
-    console.log(ctx.measureText(maxYValue.toString()).width);
 
     usableWidth = canvas.width - axisPadding.left - axisPadding.right;
     usableHeight = canvas.height - axisPadding.bottom - axisPadding.top;
